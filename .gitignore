@@ -1,0 +1,9 @@
+
+# Yong & Bach traces: no licence, do not redistribute
+yb_traces.csv
+self-jailbreaking/
+.env
+.venv/
+__pycache__/
+*.pyc
+qwen_harness.ipynb
