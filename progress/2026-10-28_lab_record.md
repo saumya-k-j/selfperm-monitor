@@ -474,34 +474,6 @@ Next experiments: agents that actually break the policy (τ²-bench airline, or 
 - `RUN_ME.md` still lists the retired Groq judges in its example commands. The Reproduce section below has the commands we actually ran.
 - Commit this week's new scripts and score files to the repository.
 
-## Questions we expect, and our answers
-
-**"The flip endings were written by you. Isn't that artificial?"** Yes, on purpose. Holding the opening fixed and changing only the ending is the only way to isolate the decision. To check it against real reasoning we ran Result 6, which uses the models' own text and only removes or swaps words. The two tests agree.
-
-**"Is the local 8B the same model as the Groq 8B from August?"** Same open weights (Llama 3.1 8B Instruct), different serving stack, and probably a different quantization. We have not yet recorded which quantization Ollama uses. What we can say is that it reproduces the August numbers within the confidence intervals (naive 0.237 against 0.254, self-permission 0.801 against 0.848, recovery 78% against 82%).
-
-**"Why a threshold of 50?"** It is the midpoint of the 0 to 100 scale and we fixed it in August before seeing any results. AUROC does not depend on a threshold, and every AUROC agrees with the threshold-based numbers. The harmless-trace run will report false-positive rates at fixed detection rates instead of a fixed threshold, which is how a deployer would set it.
-
-**"You ran many tests. What about multiple comparisons?"** The key sign tests have p-values from 1e-5 to 1e-12, far below any Bonferroni correction for the roughly 30 tests in this record (0.05 / 30 = 0.0017). The weaker ones (p = 0.016, 0.024) we describe as suggestive, not as findings.
-
-**"n = 84 is small."** It is, which is why we report bootstrap intervals for every AUROC. The 120B self-permission interval \[0.696, 0.888\] and naive interval \[0.136, 0.344\] do not overlap. Small n widens intervals. It does not explain a gap this large.
-
-**"Masking deception words changes the meaning. Is that fair?"** It changes it a little. That makes masking a generous test for the word hypothesis, and words still explained only a small part (refusals flagged 52 of 56 before, 47 of 56 after).
-
-**"Self-permission is longer. Maybe longer prompts just score higher?"** The placebo prompts are almost the same length (769 and 782 characters against 795) and recover 0%. naive\_disclaimer adds length (552) and recovers 0%. Length is not it.
-
-**"Was the naive prompt handicapped because it lacked the disclaimer?"** That was a fair concern, so we tested it. naive\_disclaimer differs from self-permission by exactly one clause and still recovers 0% of misses on the 120B.
-
-**"Did you change prompts or analysis after seeing the results?"** The monitor prompts are the August ones, unchanged. The new prompts (naive\_disclaimer, the general versions, the agent versions) were written before any of their scores existed. One analysis change: our first nodecision version cut only the last sentence. We changed it to remove every decision sentence before scoring it, because a refusal often states its decision more than once.
-
-**"Your August judges are retired. Can anyone check the old results?"** The score from every August judge call is in `scores.csv` (2,149 rows). The judges' full replies were not saved in August, and the calls cannot be re-run. That is why every new run saves the full reply (`raw_judge_reply` column in `scores_extra.csv`), uses open-weight judges with the exact version recorded, and why we re-ran the key result locally.
-
-**"Are the Yong & Bach labels trustworthy?"** They come from GPT-5, not from humans or from us. We use them as given and say so. Their release caps reasoning at 500 tokens, so our monitors see a shortened trace. The repo has no licence, so we use it for analysis only and do not redistribute it.
-
-**"Does this generalise beyond GPT-OSS?"** Not shown yet. That is what the Yong & Bach run (8 models, several families) and the refund agent pilot are for.
-
-**"Can agent builders even see the reasoning?"** With open-weight models, yes. With some hosted models only a summary is returned. The refund pilot's `--check` step tests whether reasoning comes back alongside a tool call.
-
 ## Limitations we know about
 
 1. **8B quantization not yet recorded.** Ollama's default `llama3.1:8b` is a quantized build. We pinned the exact build by its digest (`46e0c10c039e`) but have not written down which quantization it is.
