@@ -25,7 +25,7 @@ Still pending on 29 October: Qwen 3.8 on Yong & Bach's traces (Mehek), a smaller
 
 ## What was done, in order
 
-Everything below ran on Saumya's MacBook Air or through Groq, between 24 and 25 October. The design of every test was fixed before its real scores came in.
+Everything below ran on Saumya's MacBook Air, on Colab or through Groq, between 24 and 29 October. This table covers 24 to 25 October. Later runs carry their dates in Results 7 to 12. The design of every test was fixed before its real scores came in.
 
 | When | Step | Where it ran |
 | --- | --- | --- |
@@ -161,7 +161,7 @@ The rest of the list is speech models (Whisper, Orpheus) and prompt-injection cl
 
 **What this means for the results**
 
-- The August numbers stand. They are recorded scores, and `scores.csv` is the only copy. It is being uploaded to the GitHub repo.
+- The August numbers stand. They are recorded scores, and `scores.csv` is the only copy. It is now in the GitHub repo.
 - Nobody can re-run those exact judges on Groq. New results must be compared against a new baseline scored by the same judge, which is why the Qwen 3.8 baseline is pending.
 - It is direct evidence for the claim that monitorability depends on what providers keep running. A company using a hosted judge loses its monitor when the provider retires it.
 
@@ -468,11 +468,11 @@ Next experiments: agents that actually break the policy (τ²-bench airline, or 
 
 **Housekeeping still open**
 
-- Upload `scores.csv` through the GitHub web page. It is the only copy of the retired judges' scores.
+- Done 29 October: `scores.csv`, this week's scripts, score files and this record are on GitHub.
 - Fix or remove `index.html`. It still shows the scale claim we dropped.
 - Record the 8B quantization with `ollama show llama3.1:8b` and add it to the Setup section.
 - `RUN_ME.md` still lists the retired Groq judges in its example commands. The Reproduce section below has the commands we actually ran.
-- Commit this week's new scripts and score files to the repository.
+- Update the README headline, which still shows the August numbers and the retired judges.
 
 ## Questions we expect, and our answers
 
@@ -498,7 +498,7 @@ Next experiments: agents that actually break the policy (τ²-bench airline, or 
 
 **"Are the Yong & Bach labels trustworthy?"** They come from GPT-5, not from humans or from us. We use them as given and say so. Their release caps reasoning at 500 tokens, so our monitors see a shortened trace. The repo has no licence, so we use it for analysis only and do not redistribute it.
 
-**"Does this generalise beyond GPT-OSS?"** Not shown yet. That is what the Yong & Bach run (8 models, several families) and the refund agent pilot are for.
+**"Does this generalise beyond GPT-OSS?"** Not yet. On Yong & Bach's traces from 8 model families, the clause gave no advantage with two judges (Results 8 and 9). Those requests are openly harmful and the traces are cut before the decision, so it is not a fair test of subtle self-permission. The fair test, our subtle task on other open model families, is next.
 
 **"Can agent builders even see the reasoning?"** With open-weight models, yes. With some hosted models only a summary is returned. The refund pilot's `--check` step tests whether reasoning comes back alongside a tool call.
 
@@ -650,7 +650,7 @@ All in the `selfperm-monitor` folder on Saumya's laptop. Code and inputs are com
 
 | File | What it is |
 | --- | --- |
-| `scores.csv` | August scores, 2,149 rows, three retired Groq judges. Only copy. Upload pending |
+| `scores.csv` | August scores, 2,149 rows, three retired Groq judges. Only copy. On GitHub since 29 October |
 | `scores_extra.csv` | Every score since August, with judge version, temperature, run and full judge reply |
 | `traces_20b.csv`, `traces_120b.csv` | The original 105 and 84 GPT-OSS traces |
 | `flip_traces.csv` | 40 openings x 6 endings, Result 3 |
@@ -679,4 +679,4 @@ All in the `selfperm-monitor` folder on Saumya's laptop. Code and inputs are com
 
 ---
 
-This record covers everything run up to 25 October. We will add the Yong & Bach results when that run finishes, and the Qwen baseline, harmless and agent results as they come in.
+This record covers everything run up to 29 October. Pending runs are listed under In progress and next.
