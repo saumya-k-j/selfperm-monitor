@@ -43,7 +43,7 @@ import time
 from pathlib import Path
 
 from scored_monitor import is_refusal
-from extra_monitors import ALL_MONITORS, groq_backend_t, mock_backend, ollama_backend
+from extra_monitors import ALL_MONITORS, groq_backend_t, mock_backend, ollama_backend, openrouter_backend
 
 OUT_DEFAULT = "scores_extra.csv"
 FIELDS = ["dataset", "trial_id", "monitor", "judge", "temperature", "run",
@@ -71,7 +71,10 @@ def main():
     ap.add_argument("--file", required=True)
     ap.add_argument("--dataset", required=True, help="short name stored in every row")
     ap.add_argument("--judge", default="qwen/qwen3.8-27b",
-                    help="Groq model id, or ollama/<name> for a local model, e.g. ollama/llama3.1:8b")
+                    help="Groq model id, ollama/<name> for a local model (e.g. ollama/llama3.1:8b), "
+                         "or openrouter/<model> (e.g. openrouter/anthropic/claude-sonnet-5.5)")
+    ap.add_argument("--provider", default=None,
+                    help="OpenRouter only: pin one upstream provider, e.g. anthropic")
     ap.add_argument("--monitors", default="naive,self_permission,placebo,placebo_v2")
     ap.add_argument("--label-col", default=None)
     ap.add_argument("--temperature", type=float, default=0.0)
@@ -87,6 +90,7 @@ def main():
     if unknown:
         sys.exit(f"Unknown monitors: {unknown}. Known: {sorted(ALL_MONITORS)}")
 
+    or_info = {}
     if args.mock:
         backend, judge = mock_backend(), "MOCK"
     elif args.judge.startswith("ollama/"):
@@ -106,6 +110,16 @@ def main():
         judge = f"ollama/{full}@{tags[full][:12]}"
         print(f"local judge pinned to {judge}")
         args.pause = 0
+    elif args.judge.startswith("openrouter/"):
+        if not os.environ.get("OPENROUTER_API_KEY"):
+            sys.exit("Set the key first:  read -s OPENROUTER_API_KEY && export OPENROUTER_API_KEY")
+        model = args.judge.split("/", 1)[1]
+        if model.startswith("anthropic/"):
+            args.temperature = 1.0   # thinking models only run at the default; record that honestly
+        or_info = {}
+        backend = openrouter_backend(model, args.temperature, provider=args.provider, info=or_info)
+        judge = args.judge + (f"@{args.provider}" if args.provider else "")
+        args.pause = min(args.pause, 0.5)
     else:
         if not os.environ.get("GROQ_API_KEY"):
             sys.exit("Set GROQ_API_KEY first (export GROQ_API_KEY=...). Or use --mock.")
@@ -151,6 +165,10 @@ def main():
                     fh.close()
                     sys.exit("\nSTOPPED: could not reach the local model. Open the Ollama app, "
                              f"then run:  ollama pull {judge.split('/', 1)[1]}")
+                if judge.startswith("openrouter/") and ("401" in msg or "402" in msg):
+                    fh.close()
+                    sys.exit("\nSTOPPED: OpenRouter rejected the key or the spending cap is used up "
+                             f"({scored} scored this run).\n" + msg[:200])
                 if "invalid_api_key" in msg or "401" in msg:
                     fh.close()
                     sys.exit("\nSTOPPED: the API key was rejected. Set it again with:\n"
@@ -165,6 +183,8 @@ def main():
                 print(f"  ! {tr['trial_id']}/{mname}: {type(e).__name__}: {e} (rerun to retry)")
                 time.sleep(30)
                 continue
+            if judge.startswith("openrouter/") and scored == 0 and or_info:
+                print(f"  OpenRouter served: model={or_info.get('model')} provider={or_info.get('provider')}")
             if not s.ok:
                 unparsed += 1
             w.writerow({

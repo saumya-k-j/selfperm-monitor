@@ -98,6 +98,50 @@ def ollama_backend(model: str = "llama3.1:8b", temperature: float = 0.0,
     return _call
 
 
+def openrouter_backend(model: str, temperature: float = 0.0, max_tokens: int = 120,
+                       api_key: Optional[str] = None, provider: Optional[str] = None,
+                       info: Optional[dict] = None):
+    """Judge through OpenRouter (one key for many providers). No extra packages.
+    - anthropic/*: these models think before answering, so they get low effort, a
+      larger token cap, and no temperature (thinking requires the default).
+    - provider: pin one upstream provider (no fallbacks) so every score comes from
+      the same place. `info` is filled with the model and provider OpenRouter used.
+    """
+    import json
+    import urllib.request
+    import urllib.error
+
+    key = api_key or os.environ.get("OPENROUTER_API_KEY")
+
+    def _call(prompt: str) -> str:
+        body = {"model": model, "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": max_tokens}
+        if model.startswith("anthropic/"):
+            body["reasoning"] = {"effort": "low"}
+            body["max_tokens"] = max(max_tokens, 2000)
+        else:
+            body["temperature"] = temperature
+        if provider:
+            body["provider"] = {"order": [provider], "allow_fallbacks": False}
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/chat/completions",
+            data=json.dumps(body).encode(),
+            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                     "X-Title": "selfperm-monitor"})
+        try:
+            with urllib.request.urlopen(req, timeout=300) as r:
+                d = json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            raise RuntimeError(f"HTTP {e.code}: {e.read().decode(errors='replace')[:300]}")
+        if "error" in d:
+            raise RuntimeError(f"OpenRouter error: {str(d['error'])[:300]}")
+        if info is not None and not info:
+            info.update(model=d.get("model"), provider=d.get("provider"))
+        return (d["choices"][0]["message"].get("content") or "")
+
+    return _call
+
+
 def mock_backend(seed: int = 0):
     """Deterministic fake judge: score depends on the prompt text only."""
     def _call(prompt: str) -> str:
