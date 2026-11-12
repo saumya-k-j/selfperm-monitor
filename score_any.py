@@ -83,6 +83,9 @@ def main():
     ap.add_argument("--pause", type=float, default=2.5)
     ap.add_argument("--out", default=OUT_DEFAULT)
     ap.add_argument("--mock", action="store_true", help="fake scores, no API calls")
+    ap.add_argument("--record-blocked", action="store_true",
+                    help="OpenRouter only: if the provider's content filter blocks a reply, save the "
+                         "row with an empty score and the note [blocked] instead of retrying later")
     args = ap.parse_args()
 
     names = [m for m in args.monitors.split(",") if m]
@@ -119,7 +122,7 @@ def main():
         or_info = {}
         backend = openrouter_backend(model, args.temperature, provider=args.provider, info=or_info)
         judge = args.judge + (f"@{args.provider}" if args.provider else "")
-        args.pause = min(args.pause, 0.5)
+        args.pause = 3.2   # new OpenRouter accounts: 20 requests a minute
     else:
         if not os.environ.get("GROQ_API_KEY"):
             sys.exit("Set GROQ_API_KEY first (export GROQ_API_KEY=...). Or use --mock.")
@@ -143,7 +146,7 @@ def main():
     if new:
         w.writeheader()
 
-    scored = skipped = failed = unparsed = 0
+    scored = skipped = failed = unparsed = nojson = blocked = 0
     print(f"{args.dataset}: {len(traces)} traces x {len(monitors)} monitors, judge={judge}, T={temp}")
     for i, tr in enumerate(traces):
         for mname, mon in monitors.items():
@@ -165,6 +168,18 @@ def main():
                     fh.close()
                     sys.exit("\nSTOPPED: could not reach the local model. Open the Ollama app, "
                              f"then run:  ollama pull {judge.split('/', 1)[1]}")
+                if msg.startswith("BLOCKED") and args.record_blocked:
+                    blocked += 1
+                    w.writerow({
+                        "dataset": args.dataset, "trial_id": tr["trial_id"], "monitor": mname,
+                        "judge": judge, "temperature": temp, "run": args.run, "score": "",
+                        "label": tr.get(args.label_col, "") if args.label_col else "",
+                        "is_refusal": int(is_refusal(tr["raw_answer"])) if "raw_answer" in tr else "",
+                        "raw_judge_reply": "[blocked by provider content filter]",
+                    })
+                    fh.flush()
+                    print(f"  x {tr['trial_id']}/{mname}: blocked by content filter, recorded")
+                    continue
                 if judge.startswith("openrouter/") and ("401" in msg or "402" in msg):
                     fh.close()
                     sys.exit("\nSTOPPED: OpenRouter rejected the key or the spending cap is used up "
@@ -180,11 +195,14 @@ def main():
                              f"({scored} scored this run). Rerun the same command later; "
                              f"it continues where it stopped.")
                 failed += 1
-                print(f"  ! {tr['trial_id']}/{mname}: {type(e).__name__}: {e} (rerun to retry)")
-                time.sleep(30)
+                print(f"  ! {tr['trial_id']}/{mname}: {type(e).__name__}: {str(e)[:160]} (rerun to retry)")
+                time.sleep(3 if ("incomplete reply" in msg or msg.startswith("BLOCKED")) else 30)
                 continue
             if judge.startswith("openrouter/") and scored == 0 and or_info:
                 print(f"  OpenRouter served: model={or_info.get('model')} provider={or_info.get('provider')}")
+            if judge.startswith("openrouter/") and s.ok and '"score"' not in s.raw:
+                nojson += 1   # score came from the first-number fallback, so check it by hand
+                print(f"  ? {tr['trial_id']}/{mname}: no JSON score in the reply, fallback used")
             if not s.ok:
                 unparsed += 1
             w.writerow({
@@ -193,7 +211,7 @@ def main():
                 "score": s.value if s.ok else "",
                 "label": tr.get(args.label_col, "") if args.label_col else "",
                 "is_refusal": int(is_refusal(tr["raw_answer"])) if "raw_answer" in tr else "",
-                "raw_judge_reply": s.raw[:300].replace("\n", " "),
+                "raw_judge_reply": s.raw[:(2000 if judge.startswith("openrouter/") else 300)].replace("\n", " "),
             })
             fh.flush()
             scored += 1
@@ -203,6 +221,10 @@ def main():
             print(f"  {i + 1}/{len(traces)}  scored={scored} skipped={skipped}")
     fh.close()
     print(f"done. scored={scored} skipped={skipped} failed={failed} unparsed={unparsed} -> {out}")
+    if blocked:
+        print(f"  {blocked} replies were blocked by the provider's content filter and recorded as [blocked].")
+    if nojson:
+        print(f"  {nojson} replies had no JSON score; their score is the first number in the text. Check them.")
     if unparsed:
         print(f"  {unparsed} judge replies had no usable score. They are kept with an empty score.")
 

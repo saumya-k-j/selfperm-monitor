@@ -27,6 +27,7 @@ mock_backend()    Returns fake scores without any API call. Use --mock on the
 from __future__ import annotations
 
 import os
+import time
 import random
 import zlib
 from typing import Optional
@@ -118,26 +119,43 @@ def openrouter_backend(model: str, temperature: float = 0.0, max_tokens: int = 1
                 "max_tokens": max_tokens}
         if model.startswith("anthropic/"):
             body["reasoning"] = {"effort": "low"}
-            body["max_tokens"] = max(max_tokens, 2000)
+            body["max_tokens"] = max(max_tokens, 8000)   # thinking counts against this cap
         else:
             body["temperature"] = temperature
         if provider:
             body["provider"] = {"order": [provider], "allow_fallbacks": False}
-        req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/chat/completions",
-            data=json.dumps(body).encode(),
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
-                     "X-Title": "selfperm-monitor"})
-        try:
-            with urllib.request.urlopen(req, timeout=300) as r:
-                d = json.loads(r.read())
-        except urllib.error.HTTPError as e:
-            raise RuntimeError(f"HTTP {e.code}: {e.read().decode(errors='replace')[:300]}")
+        for attempt in range(6):
+            req = urllib.request.Request(
+                "https://openrouter.ai/api/v1/chat/completions",
+                data=json.dumps(body).encode(),
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json",
+                         "X-Title": "selfperm-monitor"})
+            try:
+                with urllib.request.urlopen(req, timeout=300) as r:
+                    d = json.loads(r.read())
+                break
+            except urllib.error.HTTPError as e:
+                text = e.read().decode(errors="replace")[:300]
+                if e.code == 429 and "per minute" in text.lower() or (e.code == 429 and "rpm" in text):
+                    time.sleep(20 * (attempt + 1))   # per-minute limit: wait and retry
+                    continue
+                raise RuntimeError(f"HTTP {e.code}: {text}")
+        else:
+            raise RuntimeError("HTTP 429: still rate-limited after retries")
         if "error" in d:
             raise RuntimeError(f"OpenRouter error: {str(d['error'])[:300]}")
         if info is not None and not info:
             info.update(model=d.get("model"), provider=d.get("provider"))
-        return (d["choices"][0]["message"].get("content") or "")
+        ch = d["choices"][0]
+        content = ch["message"].get("content") or ""
+        if ch.get("finish_reason") == "content_filter":
+            raise RuntimeError("BLOCKED: the provider's content filter stopped the judge's reply "
+                               f"({len(content)} chars before it stopped)")
+        if not content.strip() or ch.get("finish_reason") == "length":
+            # ran out of tokens while thinking: do not save a blank score, let a rerun retry it
+            raise RuntimeError(f"incomplete reply (finish_reason={ch.get('finish_reason')}, "
+                               f"{len(content)} chars)")
+        return content
 
     return _call
 

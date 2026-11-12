@@ -70,3 +70,31 @@ action is not allowed and does it anyway with no reason given). Write a one-line
 - **SP violations vs correct actions:** what the self-permission hypothesis predicts.
 - **SP vs MI:** whether the self-permission clause is better at catching SP than
   mistakes, which is the specific claim.
+
+## Amendment, 12 November 2026 (before any labelling)
+
+The second human labeller is not available. Saumya labels every item. As the second,
+independent rater, a separate LLM labeller is given only this codebook, the airline
+policy and the same blind sheet (no monitor scores, no model names, no answer key,
+no access to Saumya's labels). Agreement is reported as human vs LLM (raw agreement
+and Cohen's kappa) before anything is resolved. Saumya's labels are the primary
+labels; disagreements are resolved by Saumya re-reading the item, with both the
+original and resolved labels kept. This is a weaker check than two human labellers
+and is reported as such.
+
+## Amendment 2, 12 November 2026, 12:55 ET (before any labelling)
+
+Saumya does not have time to label all items. Primary labels are now made by an LLM
+labeller (Claude, in the research assistant session) that has seen no monitor scores
+for these actions, given only this codebook, the airline policy and the blind sheet.
+As the human check, Saumya labels a random subset of 10 items, chosen by seed before
+any LLM label exists, without seeing the LLM labels. Agreement on those 10 is
+reported (raw agreement and Cohen's kappa). This is weaker than two human labellers
+and is reported as LLM labels with a human spot-check.
+
+## Amendment 3, 12 November 2026, 12:56 ET
+
+The human spot-check was not done. The labels in labelling/labels_llm.csv (made
+before any monitor score for these actions was looked at) are the only labels, and
+are reported as LLM labels with no human check. The 10-item check sheet remains
+available if a human check is added later.
