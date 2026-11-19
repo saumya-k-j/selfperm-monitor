@@ -7,3 +7,9 @@ self-jailbreaking/
 __pycache__/
 *.pyc
 qwen_harness.ipynb
+
+# local working files
+.DS_Store
+.Rhistory
+labelling*/label_sheet_*.csv
+labelling*/check_sheet_*.csv

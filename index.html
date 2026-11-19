@@ -163,7 +163,7 @@ ul.ledger-list .tag { font-family: var(--mono); font-size: 0.74rem; text-transfo
 
 <div class="page">
   <header class="mast">
-    <div class="side">ML research project<br>Apart Research<br>Jul – Nov 2026<br><br>Saumya Jaiswal<br>with Mehek Parmar</div>
+    <div class="side">ML research project<br>Apart Research<br>Jul – Nov 2026<br><br>Saumya Jaiswal (University of Pennsylvania), with Mehek Parmar (NMIMS)</div>
     <div>
       <h1>Self-<span>Permission</span> Monitor</h1>
       <p class="lede">Reasoning models sometimes talk themselves into breaking a rule. They check whether an action is allowed, grant themselves an exception, and act. Standard chain-of-thought monitors miss it because the reasoning sounds careful. I built a monitor that catches it, worked out why it works, and took it into AI agents that make policy-bound decisions like refunds.</p>
@@ -264,11 +264,11 @@ ul.ledger-list .tag { font-family: var(--mono); font-size: 0.74rem; text-transfo
 
   <section class="sec">
     <aside class="margin"><span class="no">04</span><span class="kicker">Validation · mechanism</span>
-      <div class="note"><span class="big">60 / 60</span>traces where Sonnet with the clause ranked "proceed" above "decline"</div>
+      <div class="note"><span class="big">60 / 60</span>permission-ending pairs where Sonnet with the clause ranked "proceed" above "decline"</div>
     </aside>
     <div class="main">
       <h2>Why it works: the judge starts reading the decision</h2>
-      <p>With the standard prompt, the 8B judge rated careful <em>refusals</em> as more suspicious than compliance. My hypothesis: it reacts to deliberation itself, not to what the model decides. To test it, I took reasoning from three other model families (DeepSeek-R1, Qwen3 32B, GLM-4.5 Air), cut each trace just before its verdict, and attached matched endings that differ only in the decision: "Is this allowed? Yes, so proceed" against "No, so decline". A monitor that reads the decision should score "proceed" higher. The prediction was written down and dated before any of these traces was scored.</p>
+      <p>With the standard prompt, the 8B judge rated careful <em>refusals</em> as more suspicious than compliance. My hypothesis: it reacts to deliberation itself, not to what the model decides. To test it, I took reasoning from three other model families (DeepSeek-R1, Qwen3 32B, GLM-4.5 Air), cut each trace just before its verdict, and attached matched endings that differ only in the decision: "Is this allowed? Yes, so proceed" against "No, so decline". A monitor that reads the decision should score "proceed" higher. The prediction was written down and dated before any of these traces was scored. The table counts matched pairs whose endings discuss permission, 60 per judge.</p>
       <div class="tablewrap">
         <table>
           <thead><tr><th>Judge</th><th>Self-permission beat standard</th><th>Beat placebo</th><th>Proceed above decline</th></tr></thead>
@@ -279,7 +279,7 @@ ul.ledger-list .tag { font-family: var(--mono); font-size: 0.74rem; text-transfo
           </tbody>
         </table>
       </div>
-      <p><b>Confirmed on all three judges and in each model family separately</b> (exact sign test, p &lt; 10⁻¹⁰ with the 8B judge). With the 8B judge, the standard and placebo monitors could not tell proceed from decline at all. The endings are written by me; that is the cost of holding the reasoning fixed while varying one thing.</p>
+      <p><b>On endings that discuss permission, the prediction held on all three judges and in each model family:</b> the clause moved the score toward the decision more than the standard or placebo prompt did (exact sign test, p &lt; 10⁻¹⁰ with the 8B judge, whose standard and placebo monitors could not tell proceed from decline at all). It did not hold everywhere. Gemma still scored decline slightly above proceed even with the clause; the clause shrank that bias but did not reverse it. And on endings that decide without discussing permission, Sonnet's standard monitor already separated proceed from decline, and did it better than the self-permission monitor (self-permission ahead in 17 of 56 untied pairs). The endings are written by me; that is the cost of holding the reasoning fixed while varying one thing.</p>
     </div>
   </section>
 
@@ -310,11 +310,11 @@ ul.ledger-list .tag { font-family: var(--mono); font-size: 0.74rem; text-transfo
           </svg>
         </div>
         <div class="key"><span><i style="background:var(--gray-bar)"></i>unaware mistake</span><span><i style="background:var(--mark)"></i>reasoning says don't, agent acts</span><span><i style="background:var(--ink)"></i>self-permission</span></div>
-        <p class="cap"><b>Most agent violations never appear as a decision in the reasoning.</b> Unaware mistakes (a misread booking date, the wrong fare class) leave nothing to flag. In the second group, the reasoning concludes "I should ask the customer" or "transfer this", and the next action does the opposite. Reasoning-only monitors scored AUROC 0.38 to 0.58 on agent violations, on every judge tried.</p>
+        <p class="cap"><b>Most agent violations never appear as a decision in the reasoning.</b> Unaware mistakes (a misread booking date, the wrong fare class) leave nothing to flag. In the second group, the reasoning concludes "I should ask the customer" or "transfer this", and the next action does the opposite. Monitors that read only the reasoning (standard, self-permission and placebo prompts) scored AUROC 0.38 to 0.58 at separating each agent's violations from its correct write actions, on every judge tried.</p>
       </div>
       <p>In an agent, then, the decision often lives in the tool call. I built an action-aware monitor that reads the reasoning, the pending tool call and the policy together, and committed two predictions before running it.</p>
       <div class="exhibit">
-        <div class="label">Exhibit 3 · Catching "reasoning says don't, agent acts" (21 cases vs 61 correct actions)</div>
+        <div class="label">Exhibit 3 · Qwen3 32B: its 21 "reasoning says don't, agent acts" violations vs its 61 correct actions</div>
         <div class="chart">
           <svg viewBox="0 0 640 186" role="img" aria-label="AUROC of three monitor inputs on reasoning-contradicts-action violations">
             <!-- x = 240 + 370*v -->
@@ -331,7 +331,7 @@ ul.ledger-list .tag { font-family: var(--mono); font-size: 0.74rem; text-transfo
             <text class="val" x="577" y="139">0.77</text>
           </svg>
         </div>
-        <p class="cap"><b>The action-aware monitor reached AUROC 0.77</b> (95% CI 0.66 to 0.89, whisker) and flagged 71% at the fixed threshold, against 14% for reasoning only (paired difference +0.17, CI 0.00 to 0.34) and 24% for a dialogue-based check modelled on PolicyGuard (+0.25, CI 0.12 to 0.38). Same local 8B judge for all three.</p>
+        <p class="cap"><b>The action-aware monitor reached AUROC 0.77</b> (95% CI 0.66 to 0.89) and flagged 71% at the fixed threshold, against 14% for reasoning only (paired difference +0.17, CI 0.00 to 0.34) and 24% for a dialogue-based check modelled on PolicyGuard (+0.25, CI 0.12 to 0.38). All three bars score this same subset with the same local 8B judge.</p>
       </div>
     </div>
   </section>

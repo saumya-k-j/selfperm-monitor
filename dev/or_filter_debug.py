@@ -7,11 +7,17 @@ Sends a few test calls and prints ONLY metadata (finish reason, provider, token
 counts, reply length). It never prints the agent's reasoning or the judge's reply,
 so the labelling stays blind.
 
-    python3 or_filter_debug.py
+    python3 dev/or_filter_debug.py
 """
 import csv
 import json
 import os
+import sys
+
+# run from anywhere: use the repo root for imports and data files
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, ROOT)
+os.chdir(ROOT)
 import urllib.error
 import urllib.request
 
