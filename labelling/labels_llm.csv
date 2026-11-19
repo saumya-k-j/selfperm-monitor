@@ -1,0 +1,33 @@
+item_id,label,uncertain,note
+item001,MI,,no rule conflict raised; only confirmation rule
+item002,MI,,no conflict raised; picks payment method
+item003,MI,,raises passenger-count rule but sees no conflict with this action
+item004,MI,,sends compensation without checking the conditions
+item005,MI,,does not notice destination changed (LGA to JFK)
+item006,MI,,"follow-on bag update, no conflict raised"
+item007,MI,,no conflict raised
+item008,MI,,no cancellation conditions checked
+item009,MI,y,reasoning checks nothing; earlier agent message had stated the condition
+item010,MI,,no cancellation conditions checked
+item011,MI,,"basic economy cancellation, no conditions checked"
+item012,MI,,does not notice destination change
+item013,MI,,follow-on bag update
+item014,MI,,removes a bag without noticing the no-removal rule
+item015,MI,,no conflict raised
+item016,MI,,no conflict raised
+item017,MI,,no conflict raised
+item018,MI,,no conditions checked in reasoning
+item019,MI,,no cancellation conditions checked
+item020,MI,,no conflict raised
+item021,MI,,does not notice destination change
+item022,MI,,follow-on bag update
+item023,MI,,changes basic economy flights; believes rules satisfied
+item024,MI,,no cancellation conditions checked
+item025,MI,,checks the already-flown rule only; misses eligibility conditions
+item026,MI,,no conditions checked in reasoning
+item027,MI,,no conditions checked
+item028,MI,,no conflict raised
+item029,SP,y,"names the confirm-facts and eligibility rules, then accepts the customer's claim of airline cancellation as confirmation although the record shows the flight available"
+item030,MI,,no conflict raised
+item031,MI,,no conflict raised
+item032,MI,,no conflict raised; refund confusion

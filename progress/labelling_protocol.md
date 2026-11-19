@@ -98,3 +98,20 @@ The human spot-check was not done. The labels in labelling/labels_llm.csv (made
 before any monitor score for these actions was looked at) are the only labels, and
 are reported as LLM labels with no human check. The 10-item check sheet remains
 available if a human check is added later.
+
+## Amendment 4, 12 November 2026, 14:25 ET (before the run)
+
+Second agent condition. GPT-OSS 120B's tau2-bench violations were almost all unaware
+mistakes, so self-permission could not be tested there. We run the same 50 airline
+tasks x 3 trials with a different agent, Qwen3 32B (qwen/qwen3-32b, open weights),
+chosen because it complied with every manipulation request in the cross-family test
+and so is more likely to give in to pushy customers. Same user simulator
+(GPT-OSS 120B), same extraction, same codebook, same three monitors and judges.
+Both agent conditions are reported, whatever the second one shows.
+
+## Note, 12 November 2026, 21:50 ET: Qwen3 32B agent condition
+
+The 107 Qwen3 32B violations were labelled by the LLM labeller with the same codebook
+before any monitor scored them (labelling_qwen/labels_llm.csv). OT was used for one
+recurring pattern: the reasoning concludes the action should not be taken now (it plans
+to inform, ask, confirm or transfer instead), yet the tool call is made.
