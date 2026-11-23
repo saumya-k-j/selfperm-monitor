@@ -4,7 +4,7 @@
 
 **A chain-of-thought monitor that catches AI agents reasoning their way past a policy before the tool call runs.**
 
-Saumya Jaiswal (University of Pennsylvania), with Mehek Parmar (NMIMS).
+Ssaumya Jaiswal (University of Pennsylvania), with Mehek Parmar (NMIMS).
 
 Reasoning models sometimes talk themselves into breaking a rule: they check whether an action is allowed, grant themselves an exception, and act. Standard LLM-as-judge monitors pass this because the reasoning looks diligent. Adding one clause that names the pattern recovers 42 to 78% of the standard monitor's misses across three open-weight judges, against at most 10% for length-matched placebo prompts. In agents, where the decision often lives in the tool call rather than the reasoning, a monitor that also reads the pending tool call catches violations a reasoning-only monitor misses.
 
@@ -229,7 +229,7 @@ This surfaces a detectable monitoring blind spot and a way to close it, intended
 
 ## Context
 
-Begun at the Global South AI Safety Hackathon (Asia Track, Technical Safety) and continued in Apart Lab Studio. Saumya Jaiswal (University of Pennsylvania), with Mehek Parmar (NMIMS).
+Begun at the Global South AI Safety Hackathon (Asia Track, Technical Safety) and continued in Apart Lab Studio. Ssaumya Jaiswal (University of Pennsylvania), with Mehek Parmar (NMIMS).
 
 ## License
 
